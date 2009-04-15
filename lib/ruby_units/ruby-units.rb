@@ -69,6 +69,7 @@ class Unit < Numeric
   CELSIUS = ['<celsius>']
 
   SIGNATURE_VECTOR = [:length, :time, :temperature, :mass, :current, :substance, :luminosity, :currency, :memory, :angle, :capacitance]
+  BASE_UNIT_VECTOR = ['<meter>', '<second>', '<kelvin>', '<kilogram>', '<ampere>', '<mole>', '<candela>', '<dollar>', '<byte>', '<radian>', '<farad>']
   @@KINDS = {
     -312058=>:resistance, 
     -312038=>:inductance, 
@@ -250,6 +251,36 @@ class Unit < Numeric
     end
     [@scalar, @numerator, @denominator, @base_scalar, @signature, @is_base].each {|x| x.freeze}
     self
+  end
+
+  # Calculate a base unit from the signature value
+  def self.from_signature(signature, scalar = 1, vector_base = 20)
+    sig = signature # Copy so that we can -= it down to zero in loop below without losing original value
+    numerator = []
+    denominator = []
+    
+    while sig > 0
+      base_unit_vector_index = (0..SIGNATURE_VECTOR.size-1).detect{ |i| sig % vector_base**(i+1) > 0 }
+      base_unit_multiplier = sig % vector_base**(base_unit_vector_index+1) / vector_base**(base_unit_vector_index)
+      
+      raise if base_unit_multiplier == vector_base / 2 # Can't handle this!
+      if base_unit_multiplier > (vector_base / 2)
+        
+        # Assume this was a negative, so wrap it around and add to denominator
+        base_unit_multiplier -= vector_base
+        base_unit_multiplier.abs.times{ denominator << BASE_UNIT_VECTOR[base_unit_vector_index]}
+      else
+        
+        # Positive, so add to numerator
+        base_unit_multiplier.times{ numerator << BASE_UNIT_VECTOR[base_unit_vector_index]}
+      end
+      
+      sig -= base_unit_multiplier * vector_base**base_unit_vector_index
+    end
+    
+    numerator   << UNITY if numerator.empty?
+    denominator << UNITY if denominator.empty?
+    Unit.new(:numerator => numerator, :denominator => denominator, :scalar => scalar, :signature => signature)
   end
 
   def kind
