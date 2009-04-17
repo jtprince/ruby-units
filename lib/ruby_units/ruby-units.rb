@@ -332,7 +332,7 @@ class Unit < Numeric
     hash_opts = (opts.delete_at(-1) if opts[-1].class == Hash) || {} # Pull hash opts off the end
     unit_opts = opts.flatten # Everything left
     
-    unit_opts.delete_if{ |uo| uo == self.units or !(self =~ uo.to_runit) }
+    unit_opts.delete_if{ |uo| uo == self.units or !(self =~ uo.to_unit) }
     out_opts = unit_opts.collect{ |uo| self.to(uo) }
     out_opts << self
     
