@@ -310,6 +310,47 @@ class Unit < Numeric
   end
   alias :unit :to_unit
   
+  # This is fairly expensive.  Unfortunately couldn't come up with a good way to
+  # write it more low-level...
+  #
+  # Converts a Unit to a more "natural" unit, i.e. one with a scalar of lower
+  # order of magniture; e.g. will convert 0.00001 l to 10 ul.  Will not try every
+  # possible unit with the same signature, rather will try units from the list of
+  # *opts passed in.  If a unit opt passed in is not compatible, it will be
+  # skipped without complaint.
+  #
+  # Example:
+  #   '0.00001 l'.to_unit.to_lowest('ml', 'ul', 'mg') # 'mg' is skipped silently
+  #     => '10 ul'
+  #
+  # The calculation of which unit is most "natural" is based on which unit yields
+  # Math.log10(scalar).abs that is minimum, but defaults to a slight bias towards
+  # positive values of Math.log10(scalar).  This is so that '10 ul' is preferred
+  # over '0.01 ml', for example.  The bias can be altered via the :bias => x
+  # option.
+  def to_lowest(*opts)
+    hash_opts = (opts.delete_at(-1) if opts[-1].class == Hash) || {} # Pull hash opts off the end
+    unit_opts = opts.flatten # Everything left
+    
+    unit_opts.delete_if{ |uo| uo == self.units or !(self =~ uo.to_runit) }
+    out_opts = unit_opts.collect{ |uo| self.to(uo) }
+    out_opts << self
+    
+    bias = hash_opts[:bias] || 1 # Default: slight bias towards positive orders of magnitude...
+    opts_by_oom = out_opts.group_by{ |opt| oom = Math.log10(opt.scalar); oom > 0 ? oom : oom.abs+bias }
+    min_oom = opts_by_oom.keys.min
+    opts_by_oom[min_oom].first
+  end
+  
+  BASE_TEN_STD_PREFIXES = ['<yotta>', '<zetta>', '<exa>', '<peta>', '<tera>',
+                           '<giga>', '<mega>', '<kilo>', '<milli>', '<micro>',
+                           '<nano>', '<pico>', '<femto>', '<atto>', '<zepto>',
+                           '<yocto>']
+  # Useful for feeding into to_lowest()...
+  def self.build_unit_options(base_unit, prefixes = BASE_TEN_STD_PREFIXES)
+    [base_unit] + prefixes.collect{ |p| "#{p}#{base_unit}"}
+  end
+  
   # Returns 'true' if the Unit is represented in base units
   def is_base?
     return @is_base if defined? @is_base
