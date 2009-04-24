@@ -255,15 +255,18 @@ class Unit < Numeric
 
   # Calculate a base unit from the signature value
   def self.from_signature(signature, scalar = 1, vector_base = 20)
+    raise TypeError, 'signature must be a Fixnum'   unless signature.is_a?(Fixnum)
+    raise TypeError, 'vector_base must be a Fixnum' unless vector_base.is_a?(Fixnum)
+    
     sig = signature # Copy so that we can -= it down to zero in loop below without losing original value
     numerator = []
     denominator = []
     
-    while sig > 0
+    while sig != 0
       base_unit_vector_index = (0..SIGNATURE_VECTOR.size-1).detect{ |i| sig % vector_base**(i+1) > 0 }
       base_unit_multiplier = sig % vector_base**(base_unit_vector_index+1) / vector_base**(base_unit_vector_index)
       
-      raise if base_unit_multiplier == vector_base / 2 # Can't handle this!
+      raise ArgumentError, 'signature is ambiguous under given vector_base' if base_unit_multiplier == vector_base / 2 # Can't handle this!
       if base_unit_multiplier > (vector_base / 2)
         
         # Assume this was a negative, so wrap it around and add to denominator
