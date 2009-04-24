@@ -53,3 +53,40 @@ describe Unit, '.from_signature()' do
   end
   
 end
+
+
+describe Unit, '#to_lowest()' do
+  
+  before :each do
+    @unit = '0.00001 m'.to_unit
+  end
+  
+  it 'should lower @unit if possible' do
+    @unit.to_lowest('cm').unit_name.should == 'cm'
+  end
+  
+  it 'should keep original unit if lowering is not possible' do
+    @unit.to_lowest('km').should == @unit
+  end
+  
+  it 'should not complain on incompatible units' do
+    running {@unit.to_lowest('kg')}.should_not raise_error
+  end
+  
+  it 'should not use incompatible units' do
+    @unit.to_lowest('kg').should == @unit
+  end
+  
+  it 'should not complain on no args' do
+    running {@unit.to_lowest}.should_not raise_error
+  end
+  
+  it 'should bias towards preferring positive orders of magnitude by default' do
+    @unit.to_lowest('mm', 'um', 'mm').unit_name.should == 'um'
+  end
+  
+  it 'should be possible to reverse bias' do
+    @unit.to_lowest('um', 'mm', 'um', :bias => -2).unit_name.should == 'mm'
+  end
+  
+end
