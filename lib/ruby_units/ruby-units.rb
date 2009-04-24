@@ -339,8 +339,15 @@ class Unit < Numeric
     out_opts = unit_opts.collect{ |uo| self.to(uo) }
     out_opts << self
     
+    # Index opts by scalar order of magnitude
     bias = hash_opts[:bias] || 1 # Default: slight bias towards positive orders of magnitude...
-    opts_by_oom = out_opts.group_by{ |opt| oom = Math.log10(opt.scalar); oom > 0 ? oom : oom.abs+bias }
+    opts_by_oom = {}
+    out_opts.each do |opt|
+      oom = Math.log10(opt.scalar).round;
+      oom = oom > 0 ? oom : oom.abs+bias
+      opts_by_oom[oom] = [opt]
+    end
+    
     min_oom = opts_by_oom.keys.min
     opts_by_oom[min_oom].first
   end
