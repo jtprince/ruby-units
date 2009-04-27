@@ -345,11 +345,11 @@ class Unit < Numeric
     out_opts.each do |opt|
       oom = Math.log10(opt.scalar).round;
       oom = oom > 0 ? oom : oom.abs+bias
-      opts_by_oom[oom] = [opt]
+      opts_by_oom[oom] = opt
     end
     
     min_oom = opts_by_oom.keys.min
-    opts_by_oom[min_oom].first
+    opts_by_oom[min_oom]
   end
   
   BASE_TEN_STD_PREFIXES = ['<yotta>', '<zetta>', '<exa>', '<peta>', '<tera>',
