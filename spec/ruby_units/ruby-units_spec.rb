@@ -21,6 +21,11 @@ describe Unit, '.from_signature()' do
     running {Unit.from_signature(0, 1, :bad => 'args')}.should raise_error(TypeError)
   end
   
+  # Was a problem with Bignum/Fixnum at some point.
+  it 'should still work with very large signatures' do
+    Unit.from_signature(20**(Unit::SIGNATURE_VECTOR.size - 1)).should == Unit::BASE_UNIT_VECTOR[-1].to_unit
+  end
+  
   it 'should default to scalar == 1' do
     Unit.from_signature(20, 1, 20).scalar.should == 1
   end

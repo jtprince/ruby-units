@@ -255,8 +255,8 @@ class Unit < Numeric
 
   # Calculate a base unit from the signature value
   def self.from_signature(signature, scalar = 1, vector_base = 20)
-    raise TypeError, 'signature must be a Fixnum'   unless signature.is_a?(Fixnum)
-    raise TypeError, 'vector_base must be a Fixnum' unless vector_base.is_a?(Fixnum)
+    raise TypeError, 'signature must be an Integer'   unless signature.is_a?(Integer)
+    raise TypeError, 'vector_base must be an Integer' unless vector_base.is_a?(Integer)
     
     sig = signature # Copy so that we can -= it down to zero in loop below without losing original value
     numerator = []
