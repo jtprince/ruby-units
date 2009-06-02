@@ -895,8 +895,8 @@ class TestRubyUnits < Test::Unit::TestCase
   end
   
   def test_format_nil_string
-    assert_nothing_raised {"" % nil}
-    assert_nothing_raised {"" % false}
+    assert_nothing_raised {"%s" % nil}
+    assert_nothing_raised {"%s" % false}
   end
     
 end
