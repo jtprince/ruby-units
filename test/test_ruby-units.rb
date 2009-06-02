@@ -90,7 +90,7 @@ class TestRubyUnits < Test::Unit::TestCase
     assert_in_delta Time.now + 3600, "1 h".from_now, 1
     assert_in_delta "1 h".unit + Time.now, "1 h".from_now, 1
     assert_in_delta Time.now - 3600, "1 h".before_now, 1
-    assert_in_delta (Time.now.unit - Time.now).unit.scalar, 0, 1
+    assert_in_delta((Time.now.unit - Time.now).unit.scalar, 0, 1)
     assert_equal "60 min", "min".until(Time.now + 3600).to_s
     assert_equal "01:00", "min".since(Time.now - 3600).to_s("%H:%M")
     assert_in_delta Time.now, "now".time, 1
@@ -273,12 +273,12 @@ class TestRubyUnits < Test::Unit::TestCase
     c = '1 in'.unit
     d = '1 ml'.unit
     
-    assert_equal (a+b), b
-    assert_equal (a+b).units, b.units
-    assert_equal (b+a), b
-    assert_equal (b+a).units, b.units
-    assert_in_delta (b+c).scalar, 12.54, 0.01
-    assert_equal (b+c).units, 'cm'
+    assert_equal((a+b), b)
+    assert_equal((a+b).units, b.units)
+    assert_equal((b+a), b)
+    assert_equal((b+a).units, b.units)
+    assert_in_delta((b+c).scalar, 12.54, 0.01)
+    assert_equal((b+c).units, 'cm')
     assert_raises(ArgumentError) {
       b + d
     }
@@ -290,12 +290,12 @@ class TestRubyUnits < Test::Unit::TestCase
     c = '1 in'.unit
     d = '1 ml'.unit
     
-    assert_equal (a-b), -b
-    assert_equal (a-b).units, b.units
-    assert_equal (b-a), b
-    assert_equal (b-a).units, b.units
-    assert_in_delta (b-c).scalar, 7.46, 0.01
-    assert_equal (b-c).units, 'cm'
+    assert_equal((a-b), -b)
+    assert_equal((a-b).units, b.units)
+    assert_equal((b-a), b)
+    assert_equal((b-a).units, b.units)
+    assert_in_delta((b-c).scalar, 7.46, 0.01)
+    assert_equal((b-c).units, 'cm')
     assert_raises(ArgumentError) {
       b - d
     }
@@ -482,7 +482,7 @@ class TestRubyUnits < Test::Unit::TestCase
     unit1 = Unit.new("1 m")
     unit2 = Unit.new("1 1/m")
     assert_equal unit2, unit1.inverse
-    assert_raises (ZeroDivisionError) { 0.unit.inverse }
+    assert_raises(ZeroDivisionError) { 0.unit.inverse }
   end
   
   def test_exponentiate_positive
@@ -527,14 +527,14 @@ class TestRubyUnits < Test::Unit::TestCase
     unit1 = Unit.new("1.1 mm")
     unit2 = Unit.new("2 mm")
     assert_equal unit2, unit1.ceil
-    assert_equal ('1 mm'.unit / '1 mm'.unit).ceil, 1
+    assert_equal(('1 mm'.unit / '1 mm'.unit).ceil, 1)
   end
   
   def test_floor
     unit1 = Unit.new("1.1 mm")
     unit2 = Unit.new("1 mm")
     assert_equal unit2, unit1.floor
-    assert_equal ('1 mm'.unit / '1 mm'.unit).floor, 1
+    assert_equal(('1 mm'.unit / '1 mm'.unit).floor, 1)
   end
   
   def test_to_int
@@ -546,14 +546,14 @@ class TestRubyUnits < Test::Unit::TestCase
     unit1 = Unit.new("1.1 mm")
     unit2 = Unit.new("1 mm")
     assert_equal unit2, unit1.truncate
-    assert_equal (unit1/unit2).truncate, 1
+    assert_equal((unit1/unit2).truncate, 1)
   end
   
   def test_round
     unit1 = Unit.new("1.1 mm")
     unit2 = Unit.new("1 mm")
     assert_equal unit2, unit1.round
-    assert_equal (unit1/unit2).round, 1
+    assert_equal((unit1/unit2).round, 1)
   end
   
   def test_zero?
@@ -601,7 +601,7 @@ class TestRubyUnits < Test::Unit::TestCase
     assert_equal a+b, '118 tempF'.unit
     assert_equal b+a, '118 tempF'.unit
     assert_equal a-b, '82 tempF'.unit
-    assert_in_delta (a-c).scalar, '50 degF'.unit.scalar, 0.01
+    assert_in_delta((a-c).scalar, '50 degF'.unit.scalar, 0.01)
     assert_equal b+d, '20 degC'.unit
     
     assert_raises(ArgumentError) { a * b }
@@ -805,7 +805,7 @@ class TestRubyUnits < Test::Unit::TestCase
     assert_equal last_century.to_date, '1856-04-01'.to_date
   end
   
-  def test_coercion
+  def test_coercion_two
     assert_nothing_raised { 1.0 * '1 mm'.unit}
     assert_nothing_raised { '1 mm'.unit * 1.0}
   end
@@ -833,7 +833,7 @@ class TestRubyUnits < Test::Unit::TestCase
     assert_equal "1:30:30,200".unit, "1.5 hour".unit + '30 sec'.unit + '200 usec'.unit
   end
   
-  def test_coercion
+  def test_coercion_one
     a = Dummy.new
     b = '1 mm'.unit
     assert_equal '2 mm'.unit, b + a
@@ -861,13 +861,13 @@ class TestRubyUnits < Test::Unit::TestCase
   def test_complex
     assert_equal '1+1i mm'.unit.scalar, Complex(1,1)
     assert_equal '1+1i'.unit.scalar, Complex(1,1)
-    assert_raises (RuntimeError) { '1+1i mm'.unit.to_c}
+    assert_raises(RuntimeError) { '1+1i mm'.unit.to_c}
   end
 
   def test_atan2
     assert_equal Math.atan2('1 mm'.unit,'1 mm'.unit), Math.atan2(1,1)
-    assert_raises (ArgumentError) {Math.atan2('1 mm'.unit, '1 lb'.unit)}
-    assert_raises (ArgumentError) {Math.atan2('1 mm'.unit, 1)}
+    assert_raises(ArgumentError) {Math.atan2('1 mm'.unit, '1 lb'.unit)}
+    assert_raises(ArgumentError) {Math.atan2('1 mm'.unit, 1)}
   end
 
   def test_rational_units
