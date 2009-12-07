@@ -63,7 +63,11 @@ class String
       raise(ArgumentError, 'Invalid Time String') unless r
       return r
     rescue
-      Time.local(*ParseDate.parsedate(self))
+      if self == "now"
+        Time.now
+      else
+        Time.local(*ParseDate.parsedate(self))
+      end
     end
   end
   
@@ -72,7 +76,7 @@ class String
       # raises an exception if Chronic.parse = nil or if Chronic not defined
       r = Chronic.parse(self,options).to_datetime
     rescue
-      r=DateTime.civil(*ParseDate.parsedate(self)[0..5].compact)
+      r = DateTime.civil(*ParseDate.parsedate(self)[0..5].compact)
     end
     raise RuntimeError, "Invalid Time String" if r == DateTime.new      
     return r

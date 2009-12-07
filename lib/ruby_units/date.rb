@@ -4,6 +4,7 @@
 require 'date'
 
 class Date
+
   alias :unit_date_add :+
   def +(unit)
     case unit
@@ -16,7 +17,6 @@ class Date
     end
   end
 
- 
   alias :unit_date_sub :-    
   def -(unit)
     case unit
@@ -28,7 +28,7 @@ class Date
       unit_date_sub(unit)
     end
   end
-  
+
   def to_unit(other = nil)
     other ? Unit.new(self).to(other) : Unit.new(self)
   end

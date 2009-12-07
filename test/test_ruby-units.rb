@@ -63,8 +63,8 @@ end
 class TestRubyUnits < Test::Unit::TestCase
  
   def setup
-    @april_fools = Time.at 1143910800
-    @april_fools_datetime = DateTime.parse('2006-4-1 12:00')
+    dt = @april_fools_datetime = DateTime.parse('2006-4-1 12:00')
+    @april_fools = Time.gm(dt.year, dt.month, dt.day)
     Time.forced_now = @april_fools
     DateTime.forced_now = @april_fools_datetime 
     #Unit.clear_cache
@@ -106,7 +106,7 @@ class TestRubyUnits < Test::Unit::TestCase
     assert_equal 'days'.since(@april_fools - 86400), "1 day".unit
     assert_equal 'days'.since('3/31/06 12:00'), "1 day".unit
     assert_equal 'days'.since(DateTime.parse('2006-3-31 12:00')), "1 day".unit
-    assert_equal 'days'.until('4/2/2006'), '1 day'.unit
+    assert_equal 'days'.until('4/2/2006').ceil, '1 day'.unit
     assert_equal 'now'.time, Time.now
     assert_equal 'now'.datetime, DateTime.now
     assert_raises(ArgumentError) { 'days'.until(1) }
@@ -802,7 +802,7 @@ class TestRubyUnits < Test::Unit::TestCase
     today = 'now'.to_time
     assert_equal today,@april_fools
     last_century = today - '150 years'.unit
-    assert_equal last_century.to_date, '1856-04-01'.to_date
+    assert_equal '1856-04-01'.to_date, last_century.to_date
   end
   
   def test_coercion
