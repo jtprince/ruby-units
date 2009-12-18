@@ -1,5 +1,10 @@
 require 'rubygems'
+gem 'hoe', '>= 2.1.0'
 require 'hoe'
+require 'fileutils'
+
+Hoe.plugin :newgem
+
 require './lib/ruby_units/units'
 require './lib/ruby_units/ruby-units'
 
@@ -12,14 +17,16 @@ begin
 rescue
 end
 
-Hoe.new('ruby-units', Unit::VERSION) do |p|
-  p.rubyforge_name = 'ruby-units'
-  p.summary = %q{A model that performs unit conversions and unit math}
-  p.email = 'kevin.olbrich+ruby_units@gmail.com'
-  p.url = 'http://rubyforge.org/projects/ruby-units'
-  p.description = "This library handles unit conversions and unit math"
-  p.changes = p.paragraphs_of('CHANGELOG.txt', 0..1).join("\n\n")
-  p.author = 'Kevin Olbrich, Ph.D'
+# Generate all the Rake tasks
+# Run 'rake -T' to see list of generated tasks (from gem root directory)
+$hoe = Hoe.spec 'ruby-units' do
+  self.rubyforge_name = 'ruby-units'
+  self.summary = %q{A model that performs unit conversions and unit math}
+  self.email = 'kevin.olbrich+ruby_units@gmail.com'
+  self.url = 'http://rubyforge.org/projects/ruby-units'
+  self.description = "This library handles unit conversions and unit math"
+  self.changes = self.paragraphs_of('CHANGELOG.txt', 0..1).join("\n\n")
+  self.author = 'Kevin Olbrich, Ph.D'
 end
 
 # vim: syntax=Ruby
