@@ -1,7 +1,6 @@
 require 'mathn'
 require 'rational'
 require 'date'
-require 'parsedate'
 
 # = Ruby Units
 #
@@ -212,28 +211,28 @@ class Unit < Numeric
     end
     
     case options[0]
-    when Hash:
+    when Hash
       @scalar = options[0][:scalar] || 1
       @numerator = options[0][:numerator] || UNITY_ARRAY
       @denominator = options[0][:denominator] || UNITY_ARRAY
       @signature = options[0][:signature]
-    when Array:
+    when Array
       initialize(*options[0])
       return
-    when Numeric:
+    when Numeric
       @scalar = options[0]
       @numerator = @denominator = UNITY_ARRAY
-    when Time:
+    when Time
       @scalar = options[0].to_f
       @numerator = ['<second>']
       @denominator = UNITY_ARRAY
-    when DateTime:
+    when DateTime
       @scalar = options[0].ajd
       @numerator = ['<day>']
       @denominator = UNITY_ARRAY
-    when "": 
+    when ""
       raise ArgumentError, "No Unit Specified"
-    when String: 
+    when String
       parse(options[0])   
     else
       raise ArgumentError, "Invalid Unit Format"
@@ -299,8 +298,8 @@ class Unit < Numeric
      if self.units =~ /\A(deg|temp)(C|F|K|C)\Z/
       @signature = 400
       base = case self.units
-      when /temp/ : self.to('tempK')
-      when /deg/ : self.to('degK')
+      when /temp/ ; self.to('tempK')
+      when /deg/ ; self.to('degK')
       end
       return base
     end
@@ -356,10 +355,10 @@ class Unit < Numeric
       return out
     else
       case target_units
-      when :ft :
+      when :ft
         inches = self.to("in").scalar.to_int
         out = "#{(inches / 12).truncate}\'#{(inches % 12).round}\""
-      when :lbs :
+      when :lbs
         ounces = self.to("oz").scalar.to_int
         out = "#{(ounces / 16).truncate} lbs, #{(ounces % 16).round} oz"
       when String
@@ -381,7 +380,7 @@ class Unit < Numeric
         end
       else
         out = case @scalar
-        when Rational : 
+        when Rational
           "#{@scalar} #{self.units}"
         else
           "#{'%g' % @scalar} #{self.units}"
@@ -421,8 +420,8 @@ class Unit < Numeric
   # Comparisons are done based on the value of the unit in base SI units.
   def <=>(other)
     case other
-    when 0: self.base_scalar <=> 0
-    when Unit:
+    when 0 ; self.base_scalar <=> 0
+    when Unit
       raise ArgumentError, "Incompatible Units" unless self =~ other
       self.base_scalar <=> other.base_scalar
     else
@@ -441,7 +440,7 @@ class Unit < Numeric
   def =~(other)
     return true if self == 0 || other == 0
     case other
-    when Unit : self.signature == other.signature
+    when Unit ; self.signature == other.signature
     else
       x,y = coerce(other)
       x =~ y
@@ -457,7 +456,7 @@ class Unit < Numeric
   # Unit("100 cm") === Unit("1 m")      # => false
   def ===(other)
     case other
-    when Unit: (self.scalar == other.scalar) && (self.units == other.units)
+    when Unit ; (self.scalar == other.scalar) && (self.units == other.units)
     else
       x,y = coerce(other)
       x === y
@@ -473,12 +472,12 @@ class Unit < Numeric
   def +(other)   
     if Unit === other 
       case
-      when self.zero? : other.dup
-      when self =~ other :
+      when self.zero? ; other.dup
+      when self =~ other
         raise ArgumentError, "Cannot add two temperatures" if ([self, other].all? {|x| x.is_temperature?})
         if [self, other].any? {|x| x.is_temperature?}
           case self.is_temperature?
-          when true:
+          when true
             Unit.new(:scalar => (self.scalar + other.to(self.temperature_scale).scalar), :numerator => @numerator, :denominator=>@denominator, :signature => @signature)
           else
             Unit.new(:scalar => (other.scalar + self.to(other.temperature_scale).scalar), :numerator => other.numerator, :denominator=>other.denominator, :signature => other.signature)
@@ -503,14 +502,14 @@ class Unit < Numeric
   def -(other)
     if Unit === other 
     case
-      when self.zero? : -other.dup
-      when self =~ other :
+      when self.zero? ; -other.dup
+      when self =~ other
         case
-          when [self, other].all? {|x| x.is_temperature?} : 
+          when [self, other].all? {|x| x.is_temperature?}
             Unit.new(:scalar => (self.base_scalar - other.base_scalar), :numerator  => KELVIN, :denominator => UNITY_ARRAY, :signature => @signature).to(self.temperature_scale) 
-          when self.is_temperature? :
+          when self.is_temperature?
             Unit.new(:scalar => (self.base_scalar - other.base_scalar), :numerator  => ['<temp-K>'], :denominator => UNITY_ARRAY, :signature => @signature).to(self) 
-          when other.is_temperature? :
+          when other.is_temperature?
             raise ArgumentError, "Cannot subtract a temperature from a differential degree unit"
           else
             @q ||= ((@@cached_units[self.units].scalar / @@cached_units[self.units].base_scalar) rescue (self.units.unit.scalar/self.units.unit.to_base.scalar))
@@ -578,11 +577,11 @@ class Unit < Numeric
       return self.inverse if other == -1
     end
     case other
-    when Rational:
+    when Rational
       self.power(other.numerator).root(other.denominator)
-    when Integer:
+    when Integer
       self.power(other)
-    when Float:
+    when Float
       return self**(other.to_i) if other == other.to_i
       valid = (1..9).map {|x| 1/x}
       raise ArgumentError, "Not a n-th root (1..9), use 1/n" unless valid.include? other.abs
@@ -666,26 +665,26 @@ class Unit < Numeric
       target_unit = other.units rescue other
       unless @base_scalar
         @base_scalar = case start_unit
-          when 'tempC' : @scalar + 273.15
-          when 'tempK' : @scalar
-          when 'tempF' : (@scalar+459.67)*(5.0/9.0)
-          when 'tempR' : @scalar*(5.0/9.0)
+          when 'tempC' ; @scalar + 273.15
+          when 'tempK' ; @scalar
+          when 'tempF' ; (@scalar+459.67)*(5.0/9.0)
+          when 'tempR' ; @scalar*(5.0/9.0)
         end
       end
       q=  case target_unit
-            when 'tempC'  : @base_scalar - 273.15
-            when 'tempK'  : @base_scalar 
-            when 'tempF'  : @base_scalar * (9.0/5.0) - 459.67
-            when 'tempR'  : @base_scalar * (9.0/5.0) 
+            when 'tempC'  ; @base_scalar - 273.15
+            when 'tempK'  ; @base_scalar 
+            when 'tempF'  ; @base_scalar * (9.0/5.0) - 459.67
+            when 'tempR'  ; @base_scalar * (9.0/5.0) 
           end
         
       Unit.new("#{q} #{target_unit}")
     else
        case other
-          when Unit: 
+          when Unit
             return self if other.units == self.units
             target = other
-          when String: target = Unit.new(other)
+          when String ; target = Unit.new(other)
           else
             raise ArgumentError, "Unknown target units"
         end
@@ -833,9 +832,9 @@ class Unit < Numeric
   # 'min'.since(time)
   def since(time_point = ::Time.now)
     case time_point
-    when Time:      (Time.now - time_point).unit('s').to(self)
-    when DateTime, Date:  (DateTime.now - time_point).unit('d').to(self)
-    when String:    
+    when Time ;      (Time.now - time_point).unit('s').to(self)
+    when DateTime, Date ;  (DateTime.now - time_point).unit('d').to(self)
+    when String
       (DateTime.now - time_point.time(:context=>:past)).unit('d').to(self)
     else
       raise ArgumentError, "Must specify a Time, DateTime, or String" 
@@ -845,9 +844,9 @@ class Unit < Numeric
   # 'min'.until(time)
   def until(time_point = ::Time.now)
     case time_point
-    when Time:      (time_point - Time.now).unit('s').to(self)
-    when DateTime, Date:  (time_point - DateTime.now).unit('d').to(self)
-    when String:
+    when Time ;      (time_point - Time.now).unit('s').to(self)
+    when DateTime, Date ;  (time_point - DateTime.now).unit('d').to(self)
+    when String ;
       r = (time_point.time(:context=>:future) - DateTime.now)
       Time === time_point.time ? r.unit('s').to(self) : r.unit('d').to(self)
     else
@@ -882,7 +881,7 @@ class Unit < Numeric
       return [other.to_unit, self]
     end
     case other
-    when Unit : [other, self]
+    when Unit ; [other, self]
     else 
       [Unit.new(other), self]
     end
@@ -984,8 +983,8 @@ class Unit < Numeric
     den = []
     for key, value in combined do 
       case 
-      when value > 0 : value.times {num << key}
-      when value < 0 : value.abs.times {den << key}
+      when value > 0 ; value.times {num << key}
+      when value < 0 ; value.abs.times {den << key}
       end
     end
     num = UNITY_ARRAY if num.empty?
@@ -1083,8 +1082,8 @@ class Unit < Numeric
       n = item[1].to_i
       x = "#{item[0]} "
       case 
-        when n>=0 : top.gsub!(/#{item[0]}(\^|\*\*)#{n}/) {|s| x * n}
-        when n<0 : bottom = "#{bottom} #{x * -n}"; top.gsub!(/#{item[0]}(\^|\*\*)#{n}/,"")
+        when n>=0 ; top.gsub!(/#{item[0]}(\^|\*\*)#{n}/) {|s| x * n}
+        when n<0 ; bottom = "#{bottom} #{x * -n}"; top.gsub!(/#{item[0]}(\^|\*\*)#{n}/,"")
       end
     end 
     bottom.gsub!(BOTTOM_REGEX) {|s| "#{$1} " * $2.to_i} if bottom

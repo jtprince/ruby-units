@@ -10,9 +10,9 @@ class String
   # format unit output using formating codes '%0.2f' % '1 mm'.unit => '1.00 mm'
   def %(*args)
     case 
-    when Unit === args[0]: args[0].to_s(self)
-    when (!defined?(Uncertain).nil? && (Uncertain === args[0])): args[0].to_s(self)
-    when Complex === args[0]: args[0].to_s
+    when Unit === args[0] ; args[0].to_s(self)
+    when (!defined?(Uncertain).nil? && (Uncertain === args[0])) ; args[0].to_s(self)
+    when Complex === args[0] ; args[0].to_s
     else
       unit_format(*args)
     end
@@ -63,7 +63,7 @@ class String
       raise(ArgumentError, 'Invalid Time String') unless r
       return r
     rescue
-      Time.local(*ParseDate.parsedate(self))
+      Time.local(*Time.parse(self))
     end
   end
   
@@ -72,7 +72,8 @@ class String
       # raises an exception if Chronic.parse = nil or if Chronic not defined
       r = Chronic.parse(self,options).to_datetime
     rescue
-      r=DateTime.civil(*ParseDate.parsedate(self)[0..5].compact)
+      raise NotImplementedError, "not implemented yet"
+      #r=DateTime.civil(*ParseDate.parsedate(self)[0..5].compact)
     end
     raise RuntimeError, "Invalid Time String" if r == DateTime.new      
     return r
@@ -82,7 +83,8 @@ class String
     begin
       r = Chronic.parse(self,options).to_date
     rescue
-      r = Date.civil(*ParseDate.parsedate(self)[0..5].compact)
+      raise NotImplementedError, "not implemented yet"
+      #r = Date.civil(*ParseDate.parsedate(self)[0..5].compact)
     end
     raise RuntimeError, 'Invalid Date String' if r == Date.new
     return r

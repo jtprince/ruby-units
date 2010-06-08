@@ -7,7 +7,7 @@ require 'chronic' if Gem::GemPathSearcher.new.find('chronic')
 
 class Unit < Numeric
   @@USER_DEFINITIONS = {'<inchworm>' =>  [%w{inworm inchworm}, 0.0254, :length, %w{<meter>} ],
-                        '<habenero>'   => [%{degH}, 100, :temperature, %w{<celsius>}]}
+                        '<habenero>'   => [%w{degH}, 100, :temperature, %w{<celsius>}]}
   Unit.setup
 end
 
