@@ -7,13 +7,13 @@ class Time
   
   class << self
     alias unit_time_at at
-  end
-  
-  def self.at(*args)
-    if Unit === args[0]
-      unit_time_at(args[0].to("s").scalar)
-    else
-      unit_time_at(*args)
+    
+    def at(*args)
+      if Unit === args[0]
+        unit_time_at(args[0].to("s").scalar)
+      else
+        unit_time_at(*args)
+      end
     end
   end
   
@@ -24,6 +24,7 @@ class Time
   alias :u :to_unit
   alias :unit_add :+
   
+  undef_method :to_datetime
   def to_datetime
     DateTime.civil(1970,1,1)+(self.to_f+self.gmt_offset)/86400
   end

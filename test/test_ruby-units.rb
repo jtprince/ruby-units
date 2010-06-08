@@ -482,7 +482,7 @@ class TestRubyUnits < Test::Unit::TestCase
     unit1 = Unit.new("1 m")
     unit2 = Unit.new("1 1/m")
     assert_equal unit2, unit1.inverse
-    assert_raises((ZeroDivisionError)) { 0.unit.inverse }
+    assert_raises(ZeroDivisionError) { 0.unit.inverse }
   end
   
   def test_exponentiate_positive
@@ -808,7 +808,7 @@ class TestRubyUnits < Test::Unit::TestCase
     assert_equal last_century.to_date, '1856-04-01'.to_date
   end
   
-  def test_coercion
+  def test_coercion_two
     assert_nothing_raised { 1.0 * '1 mm'.unit}
     assert_nothing_raised { '1 mm'.unit * 1.0}
   end
@@ -899,8 +899,8 @@ class TestRubyUnits < Test::Unit::TestCase
   end
   
   def test_format_nil_string
-    assert_nothing_raised {"" % nil}
-    assert_nothing_raised {"" % false}
+    assert_nothing_raised {"%s" % nil}
+    assert_nothing_raised {"%s" % false}
   end
   
   def test_to_s_cache
