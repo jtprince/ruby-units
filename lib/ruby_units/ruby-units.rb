@@ -68,6 +68,7 @@ class Unit < Numeric
   CELSIUS = ['<celsius>']
 
   SIGNATURE_VECTOR = [:length, :time, :temperature, :mass, :current, :substance, :luminosity, :currency, :memory, :angle, :capacitance]
+  BASE_UNIT_VECTOR = ['<meter>', '<second>', '<kelvin>', '<kilogram>', '<ampere>', '<mole>', '<candela>', '<dollar>', '<byte>', '<radian>', '<farad>']
   @@KINDS = {
     -312058=>:resistance, 
     -312038=>:inductance, 
@@ -87,9 +88,8 @@ class Unit < Numeric
     400=>:temperature, 
     7942=>:power, 
     7959=>:pressure, 
-    7962=>:energy, 
-    7979=>:viscosity, 
     7961=>:force, 
+    7962=>:energy, 
     7997=>:mass_concentration,
     8000=>:mass, 
     159999=>:magnetism, 
@@ -252,6 +252,39 @@ class Unit < Numeric
     self
   end
 
+  # Calculate a base unit from the signature value
+  def self.from_signature(signature, scalar = 1, vector_base = 20)
+    raise TypeError, 'signature must be an Integer'   unless signature.is_a?(Integer)
+    raise TypeError, 'vector_base must be an Integer' unless vector_base.is_a?(Integer)
+    
+    sig = signature # Copy so that we can -= it down to zero in loop below without losing original value
+    numerator = []
+    denominator = []
+    
+    while sig != 0
+      base_unit_vector_index = (0..SIGNATURE_VECTOR.size-1).detect{ |i| sig % vector_base**(i+1) > 0 }
+      base_unit_multiplier = sig % vector_base**(base_unit_vector_index+1) / vector_base**(base_unit_vector_index)
+      
+      raise ArgumentError, 'signature is ambiguous under given vector_base' if base_unit_multiplier == vector_base / 2 # Can't handle this!
+      if base_unit_multiplier > (vector_base / 2)
+        
+        # Assume this was a negative, so wrap it around and add to denominator
+        base_unit_multiplier -= vector_base
+        base_unit_multiplier.abs.times{ denominator << BASE_UNIT_VECTOR[base_unit_vector_index]}
+      else
+        
+        # Positive, so add to numerator
+        base_unit_multiplier.times{ numerator << BASE_UNIT_VECTOR[base_unit_vector_index]}
+      end
+      
+      sig -= base_unit_multiplier * vector_base**base_unit_vector_index
+    end
+    
+    numerator   << UNITY if numerator.empty?
+    denominator << UNITY if denominator.empty?
+    Unit.new(:numerator => numerator, :denominator => denominator, :scalar => scalar, :signature => signature)
+  end
+
   def kind
     return @@KINDS[self.signature]
   end
@@ -279,6 +312,54 @@ class Unit < Numeric
     self
   end
   alias :unit :to_unit
+  
+  # This is fairly expensive.  Unfortunately couldn't come up with a good way to
+  # write it more low-level...
+  #
+  # Converts a Unit to a more "natural" unit, i.e. one with a scalar of lower
+  # order of magniture; e.g. will convert 0.00001 l to 10 ul.  Will not try every
+  # possible unit with the same signature, rather will try units from the list of
+  # *opts passed in.  If a unit opt passed in is not compatible, it will be
+  # skipped without complaint.
+  #
+  # Example:
+  #   '0.00001 l'.to_unit.to_lowest('ml', 'ul', 'mg') # 'mg' is skipped silently
+  #     => '10 ul'
+  #
+  # The calculation of which unit is most "natural" is based on which unit yields
+  # Math.log10(scalar).abs that is minimum, but defaults to a slight bias towards
+  # positive values of Math.log10(scalar).  This is so that '10 ul' is preferred
+  # over '0.01 ml', for example.  The bias can be altered via the :bias => x
+  # option.
+  def to_lowest(*opts)
+    hash_opts = (opts.delete_at(-1) if opts[-1].class == Hash) || {} # Pull hash opts off the end
+    unit_opts = opts.flatten # Everything left
+    
+    unit_opts.delete_if{ |uo| uo == self.units or !(self =~ uo.to_unit) }
+    out_opts = unit_opts.collect{ |uo| self.to(uo) }
+    out_opts << self
+    
+    # Index opts by scalar order of magnitude
+    bias = hash_opts[:bias] || 1 # Default: slight bias towards positive orders of magnitude...
+    opts_by_oom = {}
+    out_opts.each do |opt|
+      oom = Math.log10(opt.scalar).round;
+      oom = oom > 0 ? oom : oom.abs+bias
+      opts_by_oom[oom] = opt
+    end
+    
+    min_oom = opts_by_oom.keys.min
+    opts_by_oom[min_oom]
+  end
+  
+  BASE_TEN_STD_PREFIXES = ['<yotta>', '<zetta>', '<exa>', '<peta>', '<tera>',
+                           '<giga>', '<mega>', '<kilo>', '<milli>', '<micro>',
+                           '<nano>', '<pico>', '<femto>', '<atto>', '<zepto>',
+                           '<yocto>']
+  # Useful for feeding into to_lowest()...
+  def self.build_unit_options(base_unit, prefixes = BASE_TEN_STD_PREFIXES)
+    [base_unit] + prefixes.collect{ |p| "#{p}#{base_unit}"}
+  end
   
   # Returns 'true' if the Unit is represented in base units
   def is_base?
