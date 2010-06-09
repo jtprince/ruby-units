@@ -150,6 +150,14 @@ class Unit < Numeric
   def kind_of?(klass)
     self.scalar.kind_of?(klass)
   end
+
+  def clone_with_new_scalar(scalar)
+    u = clone
+    u.scalar = scalar
+    u.base_scalar = nil
+    u.update_base_scalar
+    u
+  end
  
   def copy(from)
     @scalar = from.scalar
@@ -160,7 +168,7 @@ class Unit < Numeric
     @base_scalar = from.base_scalar
     @unit_name = from.unit_name rescue nil
   end
-  
+
   # basically a copy of the basic to_yaml.  Needed because otherwise it ends up coercing the object to a string
   # before YAML'izing it.
   def to_yaml( opts = {} )
@@ -216,6 +224,7 @@ class Unit < Numeric
       @numerator = options[0][:numerator] || UNITY_ARRAY
       @denominator = options[0][:denominator] || UNITY_ARRAY
       @signature = options[0][:signature]
+      @base_scalar = options[0][:base_scalar]
     when Array
       initialize(*options[0])
       return
@@ -376,7 +385,7 @@ class Unit < Numeric
   # results of the conversion are cached so subsequent calls to this will be fast
   def to_base
     return self if self.is_base?
-     if self.units =~ /\A(deg|temp)(C|F|K|C)\Z/
+    if self.units =~ /\A(deg|temp)(C|F|K)\Z/
       @signature = 400
       base = case self.units
       when /temp/ ; self.to('tempK')
@@ -387,7 +396,7 @@ class Unit < Numeric
 
     cached = ((@@base_unit_cache[self.units] * self.scalar) rescue nil)
     return cached if cached
-   
+
     num = []
     den = []
     q = 1
@@ -414,6 +423,7 @@ class Unit < Numeric
     den = den.flatten.compact
     num = UNITY_ARRAY if num.empty?
     base= Unit.new(Unit.eliminate_terms(q,num,den))
+
     @@base_unit_cache[self.units]=base
     return base * @scalar
   end
@@ -557,21 +567,22 @@ class Unit < Numeric
       when self =~ other
         raise ArgumentError, "Cannot add two temperatures" if ([self, other].all? {|x| x.is_temperature?})
         if [self, other].any? {|x| x.is_temperature?}
-          case self.is_temperature?
-          when true
-            Unit.new(:scalar => (self.scalar + other.to(self.temperature_scale).scalar), :numerator => @numerator, :denominator=>@denominator, :signature => @signature)
+          if self.is_temperature?
+            self.clone_with_new_scalar(self.scalar + other.to(self.temperature_scale).scalar)
           else
-            Unit.new(:scalar => (other.scalar + self.to(other.temperature_scale).scalar), :numerator => other.numerator, :denominator=>other.denominator, :signature => other.signature)
+            other.clone_with_new_scalar(other.scalar + self.to(other.temperature_scale).scalar)
           end
         else
           @q ||= ((@@cached_units[self.units].scalar / @@cached_units[self.units].base_scalar) rescue (self.units.unit.to_base.scalar))
-          Unit.new(:scalar=>(self.base_scalar + other.base_scalar)*@q, :numerator=>@numerator, :denominator=>@denominator, :signature => @signature)
+          self.clone_with_new_scalar((self.base_scalar + other.base_scalar) * @q)
         end
       else
          raise ArgumentError,  "Incompatible Units ('#{self}' not compatible with '#{other}')"
       end
     elsif Time === other
       other + self
+    elsif Numeric == other
+      self.clone_with_new_scalar(@scalar + other)
     else
         x,y = coerce(other)
         y + x
@@ -594,13 +605,15 @@ class Unit < Numeric
             raise ArgumentError, "Cannot subtract a temperature from a differential degree unit"
           else
             @q ||= ((@@cached_units[self.units].scalar / @@cached_units[self.units].base_scalar) rescue (self.units.unit.scalar/self.units.unit.to_base.scalar))
-            Unit.new(:scalar=>(self.base_scalar - other.base_scalar)*@q, :numerator=>@numerator, :denominator=>@denominator, :signature=>@signature)            
+            self.clone_with_new_scalar((self.base_scalar - other.base_scalar) * @q)
         end
       else
          raise ArgumentError,  "Incompatible Units ('#{self}' not compatible with '#{other}')"
       end
     elsif Time === other
       other - self
+    elsif Numeric == other
+      self.clone_with_new_scalar(@scalar - other)
     else
         x,y = coerce(other)
         y-x
@@ -616,7 +629,7 @@ class Unit < Numeric
       opts.merge!(:signature => @signature + other.signature)
       Unit.new(opts)      
     when Numeric
-      Unit.new(:scalar=>@scalar*other, :numerator=>@numerator, :denominator=>@denominator, :signature => @signature)
+      self.clone_with_new_scalar(@scalar * other)
     else
       x,y = coerce(other)
       x * y
@@ -635,7 +648,7 @@ class Unit < Numeric
       Unit.new(opts)      
     when Numeric
       raise ZeroDivisionError if other.zero?
-      Unit.new(:scalar=>@scalar/other, :numerator=>@numerator, :denominator=>@denominator, :signature => @signature)      
+      self.clone_with_new_scalar(@scalar / other)
     else
       x,y = coerce(other)
       y / x
@@ -848,12 +861,12 @@ class Unit < Numeric
   
   def ceil
     return @scalar.ceil if self.unitless?
-    Unit.new(@scalar.ceil, @numerator, @denominator)    
+    self.clone_with_new_scalar(@scalar.ceil)
   end
   
   def floor
     return @scalar.floor if self.unitless?
-    Unit.new(@scalar.floor, @numerator, @denominator)    
+    self.clone_with_new_scalar(@scalar.floor)
   end
 
   # if unitless, returns an int, otherwise raises an error
@@ -886,7 +899,7 @@ class Unit < Numeric
   
   def round
     return @scalar.round if self.unitless?
-    Unit.new(@scalar.round, @numerator, @denominator)    
+    self.clone_with_new_scalar(@scalar.round)
   end
    
   # true if scalar is zero
@@ -952,7 +965,7 @@ class Unit < Numeric
   def succ
     raise ArgumentError, "Non Integer Scalar" unless @scalar == @scalar.to_i
     q = @scalar.to_i.succ
-    Unit.new(q, @numerator, @denominator)
+    self.clone_with_new_scalar(q)
   end
 
   # automatically coerce objects to units when possible
@@ -970,7 +983,6 @@ class Unit < Numeric
       
   # Protected and Private Functions that should only be called from this class
   protected
-  
   
   def update_base_scalar
     return @base_scalar unless @base_scalar.nil?

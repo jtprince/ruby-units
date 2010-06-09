@@ -63,7 +63,11 @@ class String
       raise(ArgumentError, 'Invalid Time String') unless r
       return r
     rescue
-      Time.local(*Time.parse(self))
+      if self == "now"
+        Time.now
+      else
+        Time.local(*Time.parse(self))
+      end
     end
   end
   
