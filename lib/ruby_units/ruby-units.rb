@@ -39,7 +39,7 @@ require 'date'
 #  Unit.setup
 class Unit < Numeric
   # pre-generate hashes from unit definitions for performance.  
-  VERSION = '1.1.5'
+  VERSION = '1.1.6'
   @@USER_DEFINITIONS = {}
   @@PREFIX_VALUES = {}
   @@PREFIX_MAP = {}

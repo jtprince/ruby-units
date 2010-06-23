@@ -1,6 +1,7 @@
 # Math will convert unit objects to radians and then attempt to use the value for 
 # trigonometric functions.  
 
+
 module Math
   alias unit_sqrt sqrt
   def sqrt(n)
@@ -51,19 +52,21 @@ module Math
     end
   end
   
-  alias unit_atan2 atan2
+  alias_method :unit_atan2, :atan2
+  module_function :unit_atan2
   def atan2(x,y)
     case
     when (Unit === x && Unit === y) && (x !~ y)
       raise ArgumentError, "Incompatible Units"
     when (Unit === x && Unit === y) && (x =~ y)
-      unit_atan2(x.base_scalar, y.base_scalar)
+      CMath.unit_atan2(x.base_scalar, y.base_scalar)
     when (Unit === x || Unit === y)
       raise ArgumentError, "Incompatible Units"
     else
-      unit_atan2(x,y)
+      CMath.unit_atan2(x,y)
     end
   end
+  module_function :atan2
 
    module_function :unit_hypot
    module_function :hypot
@@ -81,7 +84,5 @@ module Math
    module_function :tan
    module_function :unit_tanh
    module_function :tanh
-   module_function :unit_atan2
-   module_function :atan2
-   
 end
+
